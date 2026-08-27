@@ -1,1 +1,3 @@
-abc(123,xyz)
+func abc(ab, xyz) {
++ ab xyz
+}

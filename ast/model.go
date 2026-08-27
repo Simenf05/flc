@@ -1,5 +1,14 @@
 package ast
 
+type OperatorType rune
+
+const (
+	Addition OperatorType = '+'
+	Subtraction OperatorType = '-'
+	Multiplication OperatorType = '*'
+	Division OperatorType = '/'
+)
+
 type Expr interface {
 }
 
@@ -16,8 +25,8 @@ type VariableExpr struct {
 }
 
 type BinaryExpr struct {
-	Op       int
-	LHS, RHS Expr
+	Op          OperatorType
+	Left, Right Expr
 }
 
 type CallExpr struct {

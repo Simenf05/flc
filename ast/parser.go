@@ -1,12 +1,17 @@
 package ast
 
 import (
+	"fmt"
 	"simenf05/flc/lexer"
 )
 
 type Buffer struct {
 	vector []lexer.Token
 	index  int
+}
+
+func (b *Buffer) eat() {
+	b.index++
 }
 
 func (b *Buffer) nextToken() lexer.Token {
@@ -36,6 +41,14 @@ func (b *Buffer) ParseExpr() Expr {
 		return b.ParseNumberExpr(t)
 	case lexer.EOF:
 		return nil
+	case lexer.Func:
+		return b.ParseFunction(t)
+	case
+		lexer.TokenType(Addition),
+		lexer.TokenType(Subtraction),
+		lexer.TokenType(Multiplication),
+		lexer.TokenType(Division):
+		b.ParseBinaryExpr(t)
 	case '(':
 		return b.ParseParenExpr(t)
 	}
@@ -64,34 +77,121 @@ func (b *Buffer) ParseParenExpr(t lexer.Token) Expr {
 }
 
 func (b *Buffer) ParseIdentifierExpr(t lexer.Token) Expr {
-
-	tok := b.nextToken()
-
+	tok := b.peekToken()
 	if tok.Type != '(' {
 		return VariableExpr{
 			Name: t.StrValue,
 		}
 	}
+	b.eat()
 
 	var args []Expr
-
 	for {
-		tok = b.nextToken()
-		if tok.Type != ')' {
-			break
-		}
-		arg := b.ParseExpr()
-		if arg != nil {
+		tok = b.peekToken()
+
+		switch tok.Type {
+		case ',':
+			b.eat()
+			continue
+		case ')':
+			b.eat()
+			return CallExpr{
+				Callee: t.StrValue,
+				Args:   args,
+			}
+		default:
+			arg := b.ParseExpr()
+			if arg == nil {
+				return nil
+			}
 			args = append(args, arg)
 		}
-		tok = b.nextToken()
-		if tok.Type != ',' && tok.Type != ')' {
-			return nil
-		}
+	}
+}
+
+func (b *Buffer) ParseBinaryExpr(t lexer.Token) Expr {
+	left := b.ParseExpr()
+	right := b.ParseExpr()
+
+	if left == nil || right == nil {
+		return nil
 	}
 
-	return CallExpr{
-		Callee: t.StrValue,
-		Args:   args,
+	return BinaryExpr{
+		Op:    OperatorType(t.Type),
+		Left:  left,
+		Right: right,
+	}
+}
+
+func (b *Buffer) ParseFunction(t lexer.Token) Expr {
+
+	fmt.Println("func start")
+	if t.Type != lexer.Func {
+		return nil
+	}
+
+	fmt.Println("func before proto")
+
+	proto := b.ParsePrototype(b.nextToken())
+	if proto == nil {
+		return nil
+	}
+
+	fmt.Println("func after proto")
+
+	if tok := b.nextToken(); tok.Type != '{' {
+		return nil
+	}
+
+	fmt.Println("func before expr")
+
+	body := b.ParseExpr()
+	if body == nil {
+		return nil
+	}
+
+	fmt.Println("func after expr")
+
+
+	if tok := b.nextToken(); tok.Type != '}' {
+		return nil
+	}
+
+	fmt.Println("func done")
+
+	return FunctionExpr{
+		Proto: proto.(PrototypeExpr),
+		Body:  body,
+	}
+}
+
+func (b *Buffer) ParsePrototype(t lexer.Token) Expr {
+	if t.Type != lexer.Identifier {
+		return nil
+	}
+
+	tok := b.nextToken()
+	if tok.Type != '(' {
+		return nil
+	}
+
+	var args []string
+	for {
+		tok = b.peekToken()
+
+		switch tok.Type {
+		case ',':
+			b.eat()
+			continue
+		case ')':
+			b.eat()
+			return PrototypeExpr{
+				Name: t.StrValue,
+				Args: args,
+			}
+		default:
+			args = append(args, tok.StrValue)
+		}
 	}
 }

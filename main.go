@@ -42,13 +42,14 @@ func main() {
 
 	buffer := ast.NewBuffer(tokens)
 
-	expr := buffer.ParseExpr()
-	fmt.Printf("ret expr %v\n", expr)
-
 	for _, token := range tokens {
 		fmt.Printf("type: %d numval: %d strval: %s\n",
 			token.Type,
 			token.NumValue,
 			token.StrValue)
 	}
+
+	expr := buffer.ParseExpr()
+	fmt.Printf("ret expr %v\n", expr)
+
 }
