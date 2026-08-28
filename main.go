@@ -52,4 +52,7 @@ func main() {
 	expr := buffer.ParseExpr()
 	fmt.Printf("ret expr %v\n", expr)
 
+	expr2 := buffer.ParseExpr()
+	fmt.Printf("ret expr2 %v\n", expr2)
+
 }

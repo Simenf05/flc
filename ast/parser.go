@@ -1,7 +1,6 @@
 package ast
 
 import (
-	"fmt"
 	"simenf05/flc/lexer"
 )
 
@@ -43,12 +42,11 @@ func (b *Buffer) ParseExpr() Expr {
 		return nil
 	case lexer.Func:
 		return b.ParseFunction(t)
-	case
-		lexer.TokenType(Addition),
+	case lexer.TokenType(Addition),
 		lexer.TokenType(Subtraction),
 		lexer.TokenType(Multiplication),
 		lexer.TokenType(Division):
-		b.ParseBinaryExpr(t)
+		return b.ParseBinaryExpr(t)
 	case '(':
 		return b.ParseParenExpr(t)
 	}
@@ -126,39 +124,27 @@ func (b *Buffer) ParseBinaryExpr(t lexer.Token) Expr {
 
 func (b *Buffer) ParseFunction(t lexer.Token) Expr {
 
-	fmt.Println("func start")
 	if t.Type != lexer.Func {
 		return nil
 	}
-
-	fmt.Println("func before proto")
 
 	proto := b.ParsePrototype(b.nextToken())
 	if proto == nil {
 		return nil
 	}
 
-	fmt.Println("func after proto")
-
 	if tok := b.nextToken(); tok.Type != '{' {
 		return nil
 	}
-
-	fmt.Println("func before expr")
 
 	body := b.ParseExpr()
 	if body == nil {
 		return nil
 	}
 
-	fmt.Println("func after expr")
-
-
 	if tok := b.nextToken(); tok.Type != '}' {
 		return nil
 	}
-
-	fmt.Println("func done")
 
 	return FunctionExpr{
 		Proto: proto.(PrototypeExpr),
@@ -191,7 +177,7 @@ func (b *Buffer) ParsePrototype(t lexer.Token) Expr {
 				Args: args,
 			}
 		default:
-			args = append(args, tok.StrValue)
+			args = append(args, b.nextToken().StrValue)
 		}
 	}
 }

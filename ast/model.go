@@ -1,5 +1,8 @@
 package ast
 
+import "github.com/llir/llvm/ir"
+
+
 type OperatorType rune
 
 const (
@@ -10,6 +13,7 @@ const (
 )
 
 type Expr interface {
+	Codegen() ir.InstInsertValue
 }
 
 type NumberExpr struct {
