@@ -1,7 +1,1 @@
-func abc(ab, xyz) {
-    + ab xyz
-}
-
-func start() {
-    * 1 2
-}
++ a b

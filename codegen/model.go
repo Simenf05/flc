@@ -1,6 +1,7 @@
 package codegen
 
-type Value struct {
+import "github.com/llir/llvm/ir"
+
+type Generator struct {
+	module *ir.Module
 }
-
-

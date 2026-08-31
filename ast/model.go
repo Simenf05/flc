@@ -1,20 +1,15 @@
 package ast
 
-import "github.com/llir/llvm/ir"
-
-
 type OperatorType rune
 
 const (
-	Addition OperatorType = '+'
-	Subtraction OperatorType = '-'
+	Addition       OperatorType = '+'
+	Subtraction    OperatorType = '-'
 	Multiplication OperatorType = '*'
-	Division OperatorType = '/'
+	Division       OperatorType = '/'
 )
 
-type Expr interface {
-	Codegen() ir.InstInsertValue
-}
+type Expr any
 
 type NumberExpr struct {
 	Value int

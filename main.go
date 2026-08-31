@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"simenf05/flc/ast"
+	"simenf05/flc/codegen"
 	"simenf05/flc/lexer"
 )
 
@@ -52,7 +53,9 @@ func main() {
 	expr := buffer.ParseExpr()
 	fmt.Printf("ret expr %v\n", expr)
 
-	expr2 := buffer.ParseExpr()
-	fmt.Printf("ret expr2 %v\n", expr2)
+	gen := codegen.NewGenerator()
+	gen.Codegen(expr)
+
+	gen.Println()
 
 }
