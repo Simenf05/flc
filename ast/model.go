@@ -42,3 +42,11 @@ type FunctionExpr struct {
 	Proto PrototypeExpr
 	Body  Expr
 }
+
+type ReturnExpr struct {
+	Value Expr
+}
+
+type MultiExpr struct {
+	Exprs []Expr
+}

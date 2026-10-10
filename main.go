@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"simenf05/flc/ast"
-	"simenf05/flc/codegen"
 	"simenf05/flc/lexer"
 )
 
@@ -25,7 +24,7 @@ func main() {
 
 	if len(args) < 2 {
 		fmt.Println("Input file is missing")
-		os.Exit(1)
+		usage()
 	}
 
 	f, err := os.Open(args[1])
@@ -44,18 +43,23 @@ func main() {
 	buffer := ast.NewBuffer(tokens)
 
 	for _, token := range tokens {
+		break
 		fmt.Printf("type: %d numval: %d strval: %s\n",
 			token.Type,
 			token.NumValue,
 			token.StrValue)
 	}
 
-	expr := buffer.ParseExpr()
-	fmt.Printf("ret expr %v\n", expr)
+	exprs := buffer.ParseMultiExpr()
+	fmt.Println(exprs)
 
-	gen := codegen.NewGenerator()
-	gen.Codegen(expr)
+	// expr := buffer.ParseExpr()
+	// fmt.Printf("ret expr %v\n", expr)
 
-	gen.Println()
+	// gen := codegen.NewGenerator()
+
+	// gen.FuncExprCodegen(expr.(ast.FunctionExpr))
+
+	// gen.Println()
 
 }

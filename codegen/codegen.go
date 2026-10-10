@@ -21,13 +21,13 @@ func (g *Generator) Println() {
 	fmt.Println(g.module)
 }
 
-func (g *Generator) NumberExprCodegen(numExpr ast.NumberExpr) value.Value {
-	return constant.NewInt(types.I8, 0)
+func (g *Generator) NumberExprCodegen(numExpr ast.NumberExpr, block *ir.Block) value.Value {
+	return constant.NewInt(types.I8, int64(numExpr.Value))
 }
 
-func (g *Generator) BinaryExprCodegen(binExpr ast.BinaryExpr) value.Value {
-	left := g.Codegen(binExpr.Left)
-	right := g.Codegen(binExpr.Right)
+func (g *Generator) BinaryExprCodegen(binExpr ast.BinaryExpr, block *ir.Block) value.Value {
+	left := g.Codegen(binExpr.Left, block)
+	right := g.Codegen(binExpr.Right, block)
 
 	if left == nil || right == nil {
 		return nil
@@ -35,19 +35,19 @@ func (g *Generator) BinaryExprCodegen(binExpr ast.BinaryExpr) value.Value {
 
 	switch binExpr.Op {
 	case ast.Addition:
-		return ir.NewAdd(left, right)
+		return block.NewAdd(left, right)
 	case ast.Subtraction:
-		return ir.NewSub(left, right)
+		return block.NewSub(left, right)
 	case ast.Multiplication:
-		return ir.NewMul(left, right)
+		return block.NewMul(left, right)
 	case ast.Division:
-		return ir.NewSDiv(left, right)
+		return block.NewSDiv(left, right)
 	default:
 		return nil
 	}
 }
 
-func (g *Generator) CallExprCodegen(callExpr ast.CallExpr) value.Value {
+func (g *Generator) CallExprCodegen(callExpr ast.CallExpr, block *ir.Block) value.Value {
 	for _, callee := range g.module.Funcs {
 		if callee.Name() != callExpr.Callee {
 			continue
@@ -56,55 +56,62 @@ func (g *Generator) CallExprCodegen(callExpr ast.CallExpr) value.Value {
 		var args []value.Value
 
 		for _, expr := range callExpr.Args {
-			arg := g.Codegen(expr)
+			arg := g.Codegen(expr, block)
 			args = append(args, arg)
 		}
 
-		return ir.NewCall(callee, args...)
+		return block.NewCall(callee, args...)
 
 	}
 	return nil
 }
 
-func (g *Generator) VariableExprCodegen(varExpr ast.VariableExpr) value.Value {
+func (g *Generator) VariableExprCodegen(varExpr ast.VariableExpr, block *ir.Block) value.Value {
 	return nil
 }
 
-func (g *Generator) ProtoExprCodegen(protoExpr ast.PrototypeExpr) value.Value {
+func (g *Generator) ReturnExprCodegen(retExpr ast.ReturnExpr, block *ir.Block) value.Value {
+	var value value.Value
+	if retExpr.Value != nil {
+		value = g.Codegen(retExpr.Value, block)
+		if value == nil {
+			return nil
+		}
+	}
 
-	newFunc := block.NewFunc(protoExpr.Name, types.I8)
+	block.NewRet(value)
+	return block
+}
+
+func (g *Generator) ProtoExprHandle(protoExpr ast.PrototypeExpr) *ir.Func {
+	newFunc := g.module.NewFunc(protoExpr.Name, types.I8)
 	return newFunc
 }
 
 func (g *Generator) FuncExprCodegen(funcExpr ast.FunctionExpr) value.Value {
-	newFunc := g.Codegen(funcExpr.Proto)
-	newBody := g.Codegen(funcExpr.Body)
+	newFunc := g.ProtoExprHandle(funcExpr.Proto)
+	block := newFunc.NewBlock("")
 
-	irFunc, ok := newFunc.(*ir.IFunc)
-	if !ok {
+	value := g.Codegen(funcExpr.Body, block)
+	if value == nil {
 		return nil
 	}
 
-	return irFunc
+	return newFunc
 }
 
 func (g *Generator) Codegen(expr ast.Expr, block *ir.Block) value.Value {
-
-	fmt.Println(expr)
-
 	switch e := expr.(type) {
+	case ast.ReturnExpr:
+		return g.ReturnExprCodegen(e, block)
 	case ast.BinaryExpr:
-		return g.BinaryExprCodegen(e)
+		return g.BinaryExprCodegen(e, block)
 	case ast.CallExpr:
-		return g.CallExprCodegen(e)
+		return g.CallExprCodegen(e, block)
 	case ast.NumberExpr:
-		return g.NumberExprCodegen(e)
+		return g.NumberExprCodegen(e, block)
 	case ast.VariableExpr:
-		return g.VariableExprCodegen(e)
-	case ast.FunctionExpr:
-		return g.FuncExprCodegen(e)
-	case ast.PrototypeExpr:
-		return g.ProtoExprCodegen(e)
+		return g.VariableExprCodegen(e, block)
 	}
 
 	return nil

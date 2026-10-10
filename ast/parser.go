@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"fmt"
 	"simenf05/flc/lexer"
 )
 
@@ -29,6 +30,29 @@ func NewBuffer(tokens []lexer.Token) Buffer {
 	}
 }
 
+func (b *Buffer) ParseMultiExpr() Expr {
+	var exprs []Expr
+
+	fmt.Println(b.vector)
+	fmt.Println(b.index)
+
+	var expr Expr
+	for {
+		expr = b.ParseExpr()
+		if expr == nil {
+			break
+		}
+		exprs = append(exprs, expr)
+	}
+
+	// TODO: not nice
+	b.index--
+
+	return MultiExpr{
+		Exprs: exprs,
+	}
+}
+
 func (b *Buffer) ParseExpr() Expr {
 
 	t := b.nextToken()
@@ -42,6 +66,8 @@ func (b *Buffer) ParseExpr() Expr {
 		return nil
 	case lexer.Func:
 		return b.ParseFunction(t)
+	case lexer.Ret:
+		return b.ParseRet(t)
 	case lexer.TokenType(Addition),
 		lexer.TokenType(Subtraction),
 		lexer.TokenType(Multiplication),
@@ -52,6 +78,17 @@ func (b *Buffer) ParseExpr() Expr {
 	}
 
 	return nil
+}
+
+func (b *Buffer) ParseRet(t lexer.Token) Expr {
+	value := b.ParseExpr()
+	if value == nil {
+		b.index--
+	}
+
+	return ReturnExpr{
+		Value: value,
+	}
 }
 
 func (b *Buffer) ParseNumberExpr(t lexer.Token) Expr {
@@ -137,10 +174,12 @@ func (b *Buffer) ParseFunction(t lexer.Token) Expr {
 		return nil
 	}
 
-	body := b.ParseExpr()
+	body := b.ParseMultiExpr()
+	fmt.Printf("body %v\n", body)
 	if body == nil {
 		return nil
 	}
+	fmt.Println(b.peekToken())
 
 	if tok := b.nextToken(); tok.Type != '}' {
 		return nil

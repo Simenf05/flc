@@ -16,6 +16,7 @@ const (
 	Identifier
 	Number
 	Func
+	Ret
 )
 
 type Token struct {
@@ -81,6 +82,10 @@ func (t *Tokenizer) getToken() (*Token, error) {
 		case "func":
 			return &Token{
 				Type: Func,
+			}, nil
+		case "ret":
+			return &Token{
+				Type: Ret,
 			}, nil
 		}
 
