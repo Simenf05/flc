@@ -46,7 +46,7 @@ func (b *Buffer) ParseMultiExpr() Expr {
 	}
 
 	// TODO: not nice
-	b.index--
+	// b.index--
 
 	return MultiExpr{
 		Exprs: exprs,
@@ -181,7 +181,7 @@ func (b *Buffer) ParseFunction(t lexer.Token) Expr {
 	}
 	fmt.Println(b.peekToken())
 
-	if tok := b.nextToken(); tok.Type != '}' {
+	if tok := b.peekToken(); tok.Type != '}' {
 		return nil
 	}
 
